@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Soccer Match Odds</title>
+<style>
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f8f9fa;
+    padding: 20px;
+    max-width: 800px;
+    margin: auto;
+  }
+
+  h1 {
+    text-align: center;
+  }
+
+  .match {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-left: 5px solid #007bff;
+    margin: 15px 0;
+    padding: 15px;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+
+  .match h3 {
+    margin: 0;
+    font-size: 20px;
+  }
+
+  .match small {
+    color: #666;
+  }
+
+  .match button {
+    margin-top: 10px;
+    padding: 6px 12px;
+    font-size: 14px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .match button:hover {
+    background-color: #0056b3;
+  }
+
+  .odds-list {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .odds-list li {
+    margin-bottom: 4px;
+  }
+
+  .odds-list li span {
+    font-weight: bold;
+  }
+
+  .form-badge {
+    display: inline-block;
+    margin-right: 5px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    color: white;
+  }
+
+  .form-W { background-color: #28a745; }
+  .form-D { background-color: #6c757d; }
+  .form-L { background-color: #dc3545; }
+</style>
+
+</head>
+<body>
+  <h1>Today's Matches</h1>
+  <div id="matches">Loading...</div>
+
+  <script>
+  fetch('/api/matches')
+    .then(res => res.json())
+    .then(data => {
+      const container = document.getElementById('matches');
+      container.innerHTML = '';
+
+      data.forEach((match, index) => {
+        const div = document.createElement('div');
+        div.className = 'match';
+
+        const odds = match.odds || {};
+
+        div.innerHTML = `
+          <h3>${match.home} vs ${match.away}</h3>
+          <small>League: ${match.league}</small><br>
+          <small>Time: ${new Date(match.time).toLocaleString()}</small><br><br>
+          <button onclick="toggleDetails(${index})">Details ⬇️</button>
+          <div id="details-${index}" style="display: none; margin-top: 10px;">
+            <b>Odds:</b>
+            <ul class="odds-list">
+              <li><span>${match.home}</span>: ${match.odds["Home"] || "N/A"}</li>
+              <li><span>Draw</span>: ${match.odds["Draw"] || "N/A"}</li>
+              <li><span>${match.away}</span>: ${match.odds["Away"] || "N/A"}</li>
+            </ul>
+          </div>
+`;
+
+
+        container.appendChild(div);
+      });
+    })
+    .catch(err => {
+      document.getElementById('matches').innerText = 'Error loading matches.';
+      console.error(err);
+    });
+
+  function toggleDetails(index) {
+    const detailDiv = document.getElementById(`details-${index}`);
+    if (detailDiv.style.display === 'none') {
+      detailDiv.style.display = 'block';
+    } else {
+      detailDiv.style.display = 'none';
+    }
+  }
+</script>
+
+</body>
+</html>
