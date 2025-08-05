@@ -79,54 +79,98 @@
 </head>
 <body>
   <h1>Today's Matches</h1>
-  <div id="matches">Loading...</div>
 
-  <script>
+  <input
+  type="text"
+  id="searchInput"
+  placeholder="Search by team..."
+  oninput="filterMatches()"
+  style="width: 100%; padding: 10px; margin-bottom: 20px; font-size: 16px;"
+/>
+
+<div id="matches"></div>
+
+<script>
+  let allMatches = [];
+
   fetch('/api/matches')
     .then(res => res.json())
     .then(data => {
-      const container = document.getElementById('matches');
-      container.innerHTML = '';
+      if (!Array.isArray(data)) {
+        document.getElementById('matches').innerHTML = '<p>⚠️ Error loading match data.</p>';
+        console.error('Unexpected API response:', data);
+        return;
+      }
 
-      data.forEach((match, index) => {
-        const div = document.createElement('div');
-        div.className = 'match';
-
-        const odds = match.odds || {};
-
-        div.innerHTML = `
-          <h3>${match.home} vs ${match.away}</h3>
-          <small>League: ${match.league}</small><br>
-          <small>Time: ${new Date(match.time).toLocaleString()}</small><br><br>
-          <button onclick="toggleDetails(${index})">Details ⬇️</button>
-          <div id="details-${index}" style="display: none; margin-top: 10px;">
-            <b>Odds:</b>
-            <ul class="odds-list">
-              <li><span>${match.home}</span>: ${match.odds["Home"] || "N/A"}</li>
-              <li><span>Draw</span>: ${match.odds["Draw"] || "N/A"}</li>
-              <li><span>${match.away}</span>: ${match.odds["Away"] || "N/A"}</li>
-            </ul>
-          </div>
-`;
-
-
-        container.appendChild(div);
-      });
+      allMatches = data;
+      renderMatches(data);
     })
     .catch(err => {
       document.getElementById('matches').innerText = 'Error loading matches.';
       console.error(err);
     });
 
+  // Optional: return sample data if API fails
+
+  function filterMatches() {
+    const input = document.getElementById('searchInput').value.toLowerCase();
+    const filtered = allMatches.filter(match =>
+      match.home.toLowerCase().includes(input) ||
+      match.away.toLowerCase().includes(input)
+    );
+    renderMatches(filtered);
+  }
+
+  function renderMatches(data) {
+    const container = document.getElementById('matches');
+    container.innerHTML = '';
+
+    if (data.length === 0) {
+      container.innerHTML = '<p>No matches found.</p>';
+      return;
+    }
+
+    data.forEach((match, index) => {
+      const div = document.createElement('div');
+      div.className = 'match';
+
+      const odds = match.odds || {};
+      const homeForm = match.form?.[match.home] || ['W', 'W', 'L', 'D', 'W'];
+      const awayForm = match.form?.[match.away] || ['D', 'L', 'W', 'L', 'D'];
+
+      div.innerHTML = `
+        <h3>${match.home} vs ${match.away}</h3>
+        <small>League: ${match.league}</small><br>
+        <small>Time: ${new Date(match.time).toLocaleString()}</small><br><br>
+
+        <button onclick="toggleDetails(${index})">Details ⬇️</button>
+        <div id="details-${index}" style="display: none; margin-top: 10px;">
+          <b>Odds:</b>
+          <ul class="odds-list">
+            <li><span>${match.home}</span>: ${odds["Home"] || "N/A"}</li>
+            <li><span>Draw</span>: ${odds["Draw"] || "N/A"}</li>
+            <li><span>${match.away}</span>: ${odds["Away"] || "N/A"}</li>
+          </ul>
+
+          <b>Form:</b><br>
+          <span>${match.home}:</span>
+          ${homeForm.map(r => `<span class="form-badge form-${r}">${r}</span>`).join('')}
+          <br>
+          <span>${match.away}:</span>
+          ${awayForm.map(r => `<span class="form-badge form-${r}">${r}</span>`).join('')}
+        </div>
+      `;
+
+      container.appendChild(div);
+    });
+  }
+
   function toggleDetails(index) {
     const detailDiv = document.getElementById(`details-${index}`);
-    if (detailDiv.style.display === 'none') {
-      detailDiv.style.display = 'block';
-    } else {
-      detailDiv.style.display = 'none';
-    }
+    detailDiv.style.display = detailDiv.style.display === 'none' ? 'block' : 'none';
   }
 </script>
+
 
 </body>
 </html>
