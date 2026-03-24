@@ -1,116 +1,665 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Soccer Match Odds</title>
 <style>
+  * {
+    box-sizing: border-box;
+  }
+
   body {
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #f8f9fa;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+    min-height: 100vh;
     padding: 20px;
-    max-width: 800px;
-    margin: auto;
+    margin: 0;
+    color: #e0e0e0;
+  }
+
+  .container {
+    max-width: 850px;
+    margin: 0 auto;
   }
 
   h1 {
     text-align: center;
+    color: #fff;
+    font-size: 2rem;
+    margin-bottom: 6px;
+    text-shadow: 0 0 20px rgba(74, 144, 217, 0.5);
+    letter-spacing: 1px;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #8892b0;
+    margin-bottom: 25px;
+    font-size: 0.9rem;
+    opacity: 0.8;
+  }
+
+  .search-box {
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 15px;
+    border: 2px solid #2d3748;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #1e2a4a, #1a233a);
+    color: #e0e0e0;
+    margin-bottom: 25px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
+
+  .search-box:focus {
+    outline: none;
+    border-color: #4a90d9;
+    box-shadow: 0 0 20px rgba(74, 144, 217, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .search-box::placeholder {
+    color: #6b7280;
+  }
+
+  .matches-container {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
   }
 
   .match {
-    background: #ffffff;
-    border: 1px solid #ddd;
-    border-left: 5px solid #007bff;
-    margin: 15px 0;
-    padding: 15px;
-    border-radius: 6px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-  }
-
-  .match h3 {
-    margin: 0;
-    font-size: 20px;
-  }
-
-  .match small {
-    color: #666;
-  }
-
-  .match button {
-    margin-top: 10px;
-    padding: 6px 12px;
-    font-size: 14px;
-    border: none;
-    background-color: #007bff;
-    color: white;
-    border-radius: 4px;
+    background: linear-gradient(145deg, #1e2a4a 0%, #1a233a 100%);
+    border: 1px solid #2d3748;
+    border-left: 4px solid #4a90d9;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
     cursor: pointer;
+    position: relative;
   }
 
-  .match button:hover {
-    background-color: #0056b3;
+  .match::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #4a90d9, transparent);
+    transform: scaleX(0);
+    transition: transform 0.35s ease;
+  }
+
+  .match:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(74, 144, 217, 0.2), 0 6px 20px rgba(0,0,0,0.35);
+    border-color: #3d4a5c;
+  }
+
+  .match:hover::before {
+    transform: scaleX(1);
+  }
+
+  .match.expanded {
+    border-color: #4a90d9;
+    box-shadow: 0 8px 28px rgba(74, 144, 217, 0.22);
+  }
+
+  .match-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 18px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .match-teams {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .team-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .vs-badge {
+    background: linear-gradient(135deg, #2d3748, #3d4a5c);
+    color: #a0aec0;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .match-meta {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .match-meta small {
+    color: #6b7280;
+    font-size: 0.8rem;
+  }
+
+  .expand-arrow {
+    color: #4a90d9;
+    font-size: 16px;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(74, 144, 217, 0.1);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+  }
+
+  .match.expanded .expand-arrow {
+    transform: rotate(180deg);
+    background: rgba(74, 144, 217, 0.2);
+  }
+
+  .match-details {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .match.expanded .match-details {
+    max-height: 800px;
+  }
+
+  .match-details-inner {
+    padding: 14px 18px;
+    padding-bottom: 16px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    background: rgba(0, 0, 0, 0.15);
+  }
+
+  .details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+  }
+
+  .details-section {
+    background: linear-gradient(145deg, rgba(30, 42, 74, 0.7), rgba(26, 35, 58, 0.85));
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(74, 144, 217, 0.12);
+  }
+
+  .details-section h4 {
+    margin: 0 0 12px 0;
+    color: #4a90d9;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .details-section h4::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: #4a90d9;
+    border-radius: 50%;
   }
 
   .odds-list {
     list-style: none;
-    padding-left: 0;
+    padding: 0;
+    margin: 0;
   }
 
   .odds-list li {
-    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.9rem;
   }
 
-  .odds-list li span {
-    font-weight: bold;
+  .odds-list li:last-child {
+    border-bottom: none;
+  }
+
+  .odds-list li .label {
+    color: #a0aec0;
+  }
+
+  .odds-list li .odd-value {
+    color: #fff;
+    font-weight: 700;
+    background: rgba(74, 144, 217, 0.12);
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 0.85rem;
+  }
+
+  .form-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    gap: 10px;
+    font-size: 0.85rem;
+  }
+
+  .form-row .team-name {
+    min-width: 100px;
+    color: #8892b0;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  .form-badges {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
   }
 
   .form-badge {
-    display: inline-block;
-    margin-right: 5px;
-    padding: 2px 8px;
-    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    height: 26px;
+    border-radius: 6px;
     font-size: 12px;
+    font-weight: 700;
     color: white;
   }
 
-  .form-W { background-color: #28a745; }
-  .form-D { background-color: #6c757d; }
-  .form-L { background-color: #dc3545; }
+  .form-W { background: linear-gradient(135deg, #28a745, #20c94a); }
+  .form-D { background: linear-gradient(135deg, #6c757d, #5a6268); }
+  .form-L { background: linear-gradient(135deg, #dc3545, #c82333); }
+
+  .news-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .news-item {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .news-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .news-item:first-child {
+    padding-top: 0;
+  }
+
+  .news-source {
+    color: #4a90d9;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+    display: block;
+  }
+
+  .news-text {
+    color: #c0c8d0;
+    font-style: italic;
+  }
+
+  .news-item.injury .news-text {
+    color: #fc8181;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 70px 20px;
+    color: #8892b0;
+  }
+
+  .loading-spinner {
+    display: inline-block;
+    width: 45px;
+    height: 45px;
+    border: 3px solid rgba(74, 144, 217, 0.2);
+    border-top-color: #4a90d9;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .loading-text {
+    margin-top: 18px;
+    font-size: 0.95rem;
+    color: #8892b0;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 70px 20px;
+    color: #8892b0;
+  }
+
+  .empty-state svg {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 20px;
+    opacity: 0.4;
+  }
+
+  .prediction-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .prediction-home {
+    background: rgba(40, 167, 69, 0.2);
+    color: #5eed7a;
+    border: 1px solid rgba(40, 167, 69, 0.25);
+  }
+  .prediction-draw {
+    background: rgba(108, 117, 125, 0.2);
+    color: #a0aec0;
+    border: 1px solid rgba(108, 117, 125, 0.25);
+  }
+  .prediction-away {
+    background: rgba(220, 53, 69, 0.2);
+    color: #fc8181;
+    border: 1px solid rgba(220, 53, 69, 0.25);
+  }
+
+  .league-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    background: rgba(74, 144, 217, 0.15);
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #4a90d9;
+    letter-spacing: 0.3px;
+    border: 1px solid rgba(74, 144, 217, 0.25);
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+
+  .status-NS {
+    background: rgba(74, 144, 217, 0.15);
+    color: #4a90d9;
+    border: 1px solid rgba(74, 144, 217, 0.25);
+  }
+  .status-FT {
+    background: rgba(108, 117, 125, 0.15);
+    color: #a0aec0;
+    border: 1px solid rgba(108, 117, 125, 0.25);
+  }
+  .status-LIVE {
+    background: rgba(220, 53, 69, 0.15);
+    color: #fc8181;
+    border: 1px solid rgba(220, 53, 69, 0.25);
+    animation: livePulse 1.5s infinite;
+  }
+
+  @keyframes livePulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.3); }
+    50% { box-shadow: 0 0 0 5px rgba(220, 53, 69, 0); }
+  }
+
+  .notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    max-width: 300px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, rgba(30, 42, 74, 0.95), rgba(26, 35, 58, 0.95));
+    border: 1px solid rgba(74, 144, 217, 0.3);
+    border-left: 3px solid #4a90d9;
+    border-radius: 10px;
+    color: #e0e0e0;
+    font-size: 13px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    z-index: 1000;
+    animation: slideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  @media (max-width: 600px) {
+    body {
+      padding: 15px;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+    }
+
+    .match-header {
+      padding: 14px 15px;
+    }
+
+    .team-name {
+      font-size: 1rem;
+    }
+
+    .match-teams {
+      width: 100%;
+    }
+
+    .expand-arrow {
+      margin-top: 8px;
+    }
+
+    .details-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .form-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+  }
 </style>
 
 </head>
 <body>
-  <h1>Today's Matches</h1>
+  <div class="container">
+    <h1>⚽ Match Center</h1>
+    <p class="subtitle">Odds, form & team news</p>
 
-  <input
-  type="text"
-  id="searchInput"
-  placeholder="Search by team..."
-  oninput="filterMatches()"
-  style="width: 100%; padding: 10px; margin-bottom: 20px; font-size: 16px;"
-/>
+    <input
+      type="text"
+      id="searchInput"
+      class="search-box"
+      placeholder="Search by team..."
+      oninput="filterMatches()"
+    />
 
-<div id="matches"></div>
+    <div id="matches">
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Loading matches...</p>
+      </div>
+    </div>
+  </div>
 
 <script>
   let allMatches = [];
 
-  fetch('/api/matches')
-    .then(res => res.json())
-    .then(data => {
-      if (!Array.isArray(data)) {
-        document.getElementById('matches').innerHTML = '<p>⚠️ Error loading match data.</p>';
-        console.error('Unexpected API response:', data);
-        return;
-      }
+  const sampleMatches = [
+    {
+      id: 1001,
+      time: new Date(Date.now() + 86400000).toISOString(),
+      home: "Arsenal",
+      away: "Chelsea",
+      league: "Premier League",
+      status: "NS",
+      odds: { Home: "2.10", Draw: "3.40", Away: "3.20" },
+      form: {
+        Arsenal: ["W", "W", "D", "W", "L"],
+        Chelsea: ["W", "L", "W", "D", "W"]
+      },
+      news: [
+        { source: "Arteta (Manager)", text: "We're ready for this London derby. The squad is in great shape." },
+        { source: "Injury Report", text: "Saliba doubtful with knock; Tomiyasu out.", type: "injury" },
+        { source: "Maresca (Manager)", text: "Chelsea have won 4 of last 5. Confidence is high." }
+      ]
+    },
+    {
+      id: 1002,
+      time: new Date(Date.now() + 172800000).toISOString(),
+      home: "Manchester City",
+      away: "Liverpool",
+      league: "Premier League",
+      status: "NS",
+      odds: { Home: "1.85", Draw: "3.80", Away: "4.20" },
+      form: {
+        "Manchester City": ["W", "W", "W", "D", "W"],
+        Liverpool: ["W", "W", "L", "W", "D"]
+      },
+      news: [
+        { source: "Guardiola (Manager)", text: "Liverpool always bring intensity. We must match it." },
+        { source: "Injury Report", text: "De Bruyne fit to start; Stones remains out.", type: "injury" },
+        { source: "Slot (Manager)", text: "Anfield atmosphere will push us. Ready for the challenge." }
+      ]
+    },
+    {
+      id: 1003,
+      time: new Date(Date.now() + 259200000).toISOString(),
+      home: "Manchester United",
+      away: "Tottenham",
+      league: "Premier League",
+      status: "NS",
+      odds: { Home: "2.45", Draw: "3.30", Away: "2.75" },
+      form: {
+        "Manchester United": ["L", "D", "W", "L", "D"],
+        Tottenham: ["W", "D", "L", "W", "W"]
+      },
+      news: [
+        { source: "Amorim (Manager)", text: "We need consistency. Working hard on training pitch." },
+        { source: "Injury Report", text: "Rashford available; Maguire questionable.", type: "injury" },
+        { source: "Postecoglou (Manager)", text: "Our style won't change. We play our game always." }
+      ]
+    },
+    {
+      id: 1004,
+      time: new Date(Date.now() + 345600000).toISOString(),
+      home: "Newcastle",
+      away: "Aston Villa",
+      league: "Premier League",
+      status: "NS",
+      odds: { Home: "2.20", Draw: "3.50", Away: "3.10" },
+      form: {
+        Newcastle: ["W", "D", "W", "W", "L"],
+        "Aston Villa": ["D", "W", "L", "D", "W"]
+      },
+      news: [
+        { source: "Howe (Manager)", text: "St James' Park will be rocking. Fans are our 12th man." },
+        { source: "Injury Report", text: "Tonali banned; Burn fit again.", type: "injury" },
+        { source: "Emery (Manager)", text: "Villa have quality. We believe in our project." }
+      ]
+    },
+    {
+      id: 1005,
+      time: new Date(Date.now() + 432000000).toISOString(),
+      home: "Brighton",
+      away: "West Ham",
+      league: "Premier League",
+      status: "NS",
+      odds: { Home: "2.00", Draw: "3.60", Away: "3.40" },
+      form: {
+        Brighton: ["D", "W", "W", "L", "D"],
+        "West Ham": ["L", "L", "D", "W", "L"]
+      },
+      news: [
+        { source: "Hurzeler (Manager)", text: "Young squad learning every week. Progress is clear." },
+        { source: "Injury Report", text: "Mitoma close to return; Danso out.", type: "injury" },
+        { source: "Lopetegui (Manager)", text: "Need to find rhythm. Working on solutions." }
+      ]
+    }
+  ];
 
-      allMatches = data;
-      renderMatches(data);
-    })
-    .catch(err => {
-      document.getElementById('matches').innerText = 'Error loading matches.';
-      console.error(err);
-    });
+  function loadMatches() {
+    fetch('/api/matches')
+      .then(res => {
+        if (!res.ok) throw new Error('Network response failed');
+        return res.json();
+      })
+      .then(data => {
+        if (!Array.isArray(data) || data.length === 0) {
+          throw new Error('Invalid or empty response');
+        }
+        allMatches = data;
+        renderMatches(data);
+      })
+      .catch(err => {
+        console.error('API error:', err);
+        allMatches = sampleMatches;
+        renderMatches(sampleMatches);
+        showNotification('API unavailable - showing sample data');
+      });
+  }
 
-  // Optional: return sample data if API fails
+  function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+      notification.style.animation = 'slideIn 0.35s reverse';
+      setTimeout(() => notification.remove(), 350);
+    }, 4500);
+  }
 
   function filterMatches() {
     const input = document.getElementById('searchInput').value.toLowerCase();
@@ -126,51 +675,141 @@
     container.innerHTML = '';
 
     if (data.length === 0) {
-      container.innerHTML = '<p>No matches found.</p>';
+      container.innerHTML = `
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.55-7.55L19 8l-9 9z"/>
+          </svg>
+          <p style="font-size: 1rem;">No matches found</p>
+          <p style="font-size: 0.85rem; margin-top: 8px; opacity: 0.7;">Try a different search</p>
+        </div>
+      `;
       return;
     }
 
+    const matchesList = document.createElement('div');
+    matchesList.className = 'matches-container';
+
     data.forEach((match, index) => {
-      const div = document.createElement('div');
-      div.className = 'match';
-
-      const odds = match.odds || {};
-      const homeForm = match.form?.[match.home] || ['W', 'W', 'L', 'D', 'W'];
-      const awayForm = match.form?.[match.away] || ['D', 'L', 'W', 'L', 'D'];
-
-      div.innerHTML = `
-        <h3>${match.home} vs ${match.away}</h3>
-        <small>League: ${match.league}</small><br>
-        <small>Time: ${new Date(match.time).toLocaleString()}</small><br><br>
-
-        <button onclick="toggleDetails(${index})">Details ⬇️</button>
-        <div id="details-${index}" style="display: none; margin-top: 10px;">
-          <b>Odds:</b>
-          <ul class="odds-list">
-            <li><span>${match.home}</span>: ${odds["Home"] || "N/A"}</li>
-            <li><span>Draw</span>: ${odds["Draw"] || "N/A"}</li>
-            <li><span>${match.away}</span>: ${odds["Away"] || "N/A"}</li>
-          </ul>
-
-          <b>Form:</b><br>
-          <span>${match.home}:</span>
-          ${homeForm.map(r => `<span class="form-badge form-${r}">${r}</span>`).join('')}
-          <br>
-          <span>${match.away}:</span>
-          ${awayForm.map(r => `<span class="form-badge form-${r}">${r}</span>`).join('')}
-        </div>
-      `;
-
-      container.appendChild(div);
+      const matchEl = createMatchElement(match, index);
+      matchesList.appendChild(matchEl);
     });
+
+    container.appendChild(matchesList);
+  }
+
+  function createMatchElement(match, index) {
+    const div = document.createElement('div');
+    div.className = 'match';
+    div.onclick = () => toggleDetails(index);
+
+    const odds = match.odds || {};
+    const homeForm = match.form?.[match.home] || [];
+    const awayForm = match.form?.[match.away] || [];
+    const news = match.news || [];
+
+    const prediction = calculatePrediction(odds);
+    const statusClass = match.status || 'NS';
+
+    div.innerHTML = `
+      <div class="match-header">
+        <div class="match-teams">
+          <span class="team-name">${escapeHtml(match.home)}</span>
+          <span class="vs-badge">VS</span>
+          <span class="team-name">${escapeHtml(match.away)}</span>
+        </div>
+        <div class="expand-arrow" title="Toggle">▼</div>
+      </div>
+      <div class="match-meta">
+        <span class="status-badge status-${statusClass}">${formatStatus(statusClass)}</span>
+        <span class="league-badge">${escapeHtml(match.league)}</span>
+        ${prediction ? `<span class="prediction-badge prediction-${prediction.label}">${prediction.text}</span>` : ''}
+        <small style="margin-left: auto;">${formatDateTime(match.time)}</small>
+      </div>
+      <div class="match-details">
+        <div class="match-details-inner">
+          <div class="details-grid">
+            <div class="details-section">
+              <h4>Odds</h4>
+              <ul class="odds-list">
+                <li><span class="label">${escapeHtml(match.home)}</span><span class="odd-value">${odds["Home"] || "N/A"}</span></li>
+                <li><span class="label">Draw</span><span class="odd-value">${odds["Draw"] || "N/A"}</span></li>
+                <li><span class="label">${escapeHtml(match.away)}</span><span class="odd-value">${odds["Away"] || "N/A"}</span></li>
+              </ul>
+            </div>
+            <div class="details-section">
+              <h4>Form (Last 5)</h4>
+              <div class="form-row">
+                <span class="team-name">${escapeHtml(match.home)}</span>
+                <div class="form-badges">${homeForm.length > 0 ? homeForm.map(r => `<span class="form-badge form-${r}">${r}</span>`).join('') : '<span style="color:#666">—</span>'}</div>
+              </div>
+              <div class="form-row">
+                <span class="team-name">${escapeHtml(match.away)}</span>
+                <div class="form-badges">${awayForm.length > 0 ? awayForm.map(r => `<span class="form-badge form-${r}">${r}</span>`).join('') : '<span style="color:#666">—</span>'}</div>
+              </div>
+            </div>
+            ${news.length > 0 ? `
+            <div class="details-section" style="grid-column: 1 / -1;">
+              <h4>Team News</h4>
+              <ul class="news-list">
+                ${news.map(n => `
+                  <li class="news-item${n.type === 'injury' ? ' injury' : ''}">
+                    <span class="news-source">${n.source}</span>
+                    <span class="news-text">${n.text}</span>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+
+    return div;
+  }
+
+  function calculatePrediction(odds) {
+    if (!odds.Home || !odds.Draw || !odds.Away) return null;
+    const homeOdd = parseFloat(odds.Home);
+    const drawOdd = parseFloat(odds.Draw);
+    const awayOdd = parseFloat(odds.Away);
+    if (homeOdd <= drawOdd && homeOdd <= awayOdd) return { label: 'home', text: 'Home Favorite' };
+    if (awayOdd <= drawOdd && awayOdd <= homeOdd) return { label: 'away', text: 'Away Favorite' };
+    return { label: 'draw', text: 'Even Match' };
+  }
+
+  function formatStatus(status) {
+    const map = { 'NS': 'Not Started', 'FT': 'Full Time', 'LIVE': 'LIVE', 'HT': 'Half Time', 'POSTP': 'Postponed', 'CANC': 'Cancelled' };
+    return map[status] || status;
+  }
+
+  function formatDateTime(dateStr) {
+    try {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const isToday = date.toDateString() === now.toDateString();
+      const isTomorrow = date.toDateString() === new Date(now.getTime() + 86400000).toDateString();
+      const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      if (isToday) return `Today • ${timeStr}`;
+      if (isTomorrow) return `Tomorrow • ${timeStr}`;
+      return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ' • ' + timeStr;
+    } catch (e) { return dateStr; }
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   function toggleDetails(index) {
-    const detailDiv = document.getElementById(`details-${index}`);
-    detailDiv.style.display = detailDiv.style.display === 'none' ? 'block' : 'none';
+    const matchEl = document.querySelectorAll('.match')[index];
+    matchEl.classList.toggle('expanded');
   }
-</script>
 
+  loadMatches();
+</script>
 
 </body>
 </html>

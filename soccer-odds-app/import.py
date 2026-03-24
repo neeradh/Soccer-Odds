@@ -18,40 +18,60 @@ HEADERS = {
 
 BASE_URL = "https://v3.football.api-sports.io"
 LEAGUE_ID = 39  # Premier League
-SEASON = 2024
+
+# Get current year and calculate season range (past 20 seasons)
+current_year = datetime.now().year
+current_month = datetime.now().month
+# Season year: if we're before August, use previous year as season start
+current_season_start = current_year - 1 if current_month < 8 else current_year
+SEASON_STARTS = [current_season_start - i for i in range(20)]  # Past 20 seasons
 
 
 def get_today_matches():
-    """Fetch today's Premier League matches."""
+    """Fetch today's Premier League matches across all 20 seasons."""
     today = datetime.now().strftime("%Y-%m-%d")
-    url = f"{BASE_URL}/fixtures?date={today}&league={LEAGUE_ID}&season={SEASON}"
-    res = requests.get(url, headers=HEADERS)
-    if res.status_code != 200:
-        raise Exception(f"Fixtures error: {res.status_code} {res.text}")
-    return res.json()["response"]
+    matches = []
+    for season in SEASON_STARTS:
+        try:
+            url = f"{BASE_URL}/fixtures?date={today}&league={LEAGUE_ID}&season={season}"
+            res = requests.get(url, headers=HEADERS)
+            if res.status_code == 200:
+                matches.extend(res.json()["response"])
+        except Exception:
+            continue  # Skip seasons with no data
+    return matches
 
 
 def get_upcoming_matches():
-    """Fetch upcoming Premier League matches as fallback."""
-    url = f"{BASE_URL}/fixtures?league={LEAGUE_ID}&season={SEASON}"
-    res = requests.get(url, headers=HEADERS)
-    if res.status_code != 200:
-        raise Exception(f"Fixtures error: {res.status_code} {res.text}")
-    matches = res.json()["response"]
-    # Filter to only Not Started (NS) matches, take up to 10
-    return [m for m in matches if m["fixture"]["status"]["short"] == "NS"][:10]
+    """Fetch upcoming Premier League matches across all 20 seasons."""
+    matches = []
+    for season in SEASON_STARTS:
+        try:
+            url = f"{BASE_URL}/fixtures?league={LEAGUE_ID}&season={season}"
+            res = requests.get(url, headers=HEADERS)
+            if res.status_code == 200:
+                season_matches = [m for m in res.json()["response"] if m["fixture"]["status"]["short"] == "NS"]
+                matches.extend(season_matches)
+        except Exception:
+            continue  # Skip seasons with no data
+    return matches[:10]
 
 
 def get_last_completed_matches():
-    """Fetch the most recent finished matches as a demo fallback."""
-    url = f"{BASE_URL}/fixtures?league={LEAGUE_ID}&season={SEASON}&status=FT"
-    res = requests.get(url, headers=HEADERS)
-    if res.status_code != 200:
-        raise Exception(f"Fixtures error: {res.status_code} {res.text}")
-    matches = res.json()["response"]
+    """Fetch the most recent finished matches across all 20 seasons."""
+    matches = []
+    for season in SEASON_STARTS:
+        try:
+            url = f"{BASE_URL}/fixtures?league={LEAGUE_ID}&season={season}&status=FT"
+            res = requests.get(url, headers=HEADERS)
+            if res.status_code == 200:
+                matches.extend(res.json()["response"])
+        except Exception:
+            continue  # Skip seasons with no data
+
     if not matches:
         return []
-    # Sort by date descending, take the most recent matchday (within 3 days of latest)
+    # Sort by date descending, take the most recent matchday
     matches.sort(key=lambda x: x["fixture"]["date"], reverse=True)
     latest_date = matches[0]["fixture"]["date"][:10]
     return [m for m in matches if m["fixture"]["date"][:10] == latest_date][:10]
@@ -86,32 +106,34 @@ def get_odds(fixture_id):
 
 
 def get_team_form(team_id):
-    """Fetch last 5 finished matches for a team and return form (W/D/L)."""
-    url = f"{BASE_URL}/fixtures?team={team_id}&season={SEASON}&status=FT"
-    try:
-        res = requests.get(url, headers=HEADERS)
-        if res.status_code != 200:
-            return []
-        fixtures = res.json()["response"]
-        # Sort by date descending, take last 5
-        fixtures.sort(key=lambda x: x["fixture"]["date"], reverse=True)
-        recent = fixtures[:5]
-        form = []
-        for f in recent:
-            home_win = f["teams"]["home"].get("winner")
-            away_win = f["teams"]["away"].get("winner")
-            is_home = f["teams"]["home"]["id"] == team_id
-            if home_win is None or away_win is None:
-                form.append("D")
-            elif (is_home and home_win) or (not is_home and away_win):
-                form.append("W")
-            elif (is_home and away_win) or (not is_home and home_win):
-                form.append("L")
-            else:
-                form.append("D")
-        return form
-    except Exception:
-        return []
+    """Fetch last 5 finished matches for a team across all 20 seasons and return form (W/D/L)."""
+    all_fixtures = []
+    for season in SEASON_STARTS:
+        try:
+            url = f"{BASE_URL}/fixtures?team={team_id}&season={season}&status=FT"
+            res = requests.get(url, headers=HEADERS)
+            if res.status_code == 200:
+                all_fixtures.extend(res.json()["response"])
+        except Exception:
+            continue  # Skip seasons with no data
+
+    # Sort by date descending, take last 5
+    all_fixtures.sort(key=lambda x: x["fixture"]["date"], reverse=True)
+    recent = all_fixtures[:5]
+    form = []
+    for f in recent:
+        home_win = f["teams"]["home"].get("winner")
+        away_win = f["teams"]["away"].get("winner")
+        is_home = f["teams"]["home"]["id"] == team_id
+        if home_win is None or away_win is None:
+            form.append("D")
+        elif (is_home and home_win) or (not is_home and away_win):
+            form.append("W")
+        elif (is_home and away_win) or (not is_home and home_win):
+            form.append("L")
+        else:
+            form.append("D")
+    return form
 
 
 def format_form(form):
