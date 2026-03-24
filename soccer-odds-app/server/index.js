@@ -7,10 +7,9 @@ const PORT = 3000;
 
 async function getOddsForFixture(fixtureId) {
   try {
-    const oddsRes = await axios.get(`https://api-football-v1.p.rapidapi.com/v3/odds?fixture=${fixtureId}`, {
+    const oddsRes = await axios.get(`https://v3.football.api-sports.io/v3/odds?fixture=${fixtureId}`, {
       headers: {
-        'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
-        'x-rapidapi-key': process.env.RAPID_API_KEY,
+        'x-apisports-key': process.env.API_SPORTS_KEY,
       },
     });
 
@@ -34,11 +33,10 @@ async function getOddsForFixture(fixtureId) {
 async function getTeamForm(teamId) {
   try {
     const res = await axios.get(
-      `https://api-football-v1.p.rapidapi.com/v3/fixtures?team=${teamId}&season=2025&status=FT`,
+      `https://v3.football.api-sports.io/v3/fixtures?team=${teamId}&season=2024&status=FT`,
       {
         headers: {
-          'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
-          'x-rapidapi-key': process.env.RAPID_API_KEY,
+          'x-apisports-key': process.env.API_SPORTS_KEY,
         },
       }
     );
@@ -70,13 +68,12 @@ app.get('/api/matches', async (req, res) => {
     const today = new Date().toISOString().split('T')[0];
 
     const headers = {
-      'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
-      'x-rapidapi-key': process.env.RAPID_API_KEY,
+      'x-apisports-key': process.env.API_SPORTS_KEY,
     };
 
     // 1. Try today's Premier League matches
     const todayRes = await axios.get(
-      `https://api-football-v1.p.rapidapi.com/v3/fixtures?date=${today}&league=39&season=2025`,
+      `https://v3.football.api-sports.io/v3/fixtures?date=${today}&league=39&season=2024`,
       { headers }
     );
 
@@ -85,7 +82,7 @@ app.get('/api/matches', async (req, res) => {
     // 2. If none today, get upcoming ones
     if (matches.length === 0) {
       const upcomingRes = await axios.get(
-        `https://api-football-v1.p.rapidapi.com/v3/fixtures?league=39&season=2025`,
+        `https://v3.football.api-sports.io/v3/fixtures?league=39&season=2024`,
         { headers }
       );
 
