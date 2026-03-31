@@ -1,13 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Soccer Match Odds</title>
+  <title>Match Centre</title>
 <style>
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box; }
 
   body {
     font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -18,17 +16,13 @@
     color: #e0e0e0;
   }
 
-  .container {
-    max-width: 850px;
-    margin: 0 auto;
-  }
+  .container { max-width: 850px; margin: 0 auto; }
 
   h1 {
     text-align: center;
     color: #fff;
     font-size: 2rem;
     margin-bottom: 6px;
-    text-shadow: 0 0 20px rgba(74, 144, 217, 0.5);
     letter-spacing: 1px;
   }
 
@@ -37,8 +31,25 @@
     color: #8892b0;
     margin-bottom: 25px;
     font-size: 0.9rem;
-    opacity: 0.8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
   }
+
+  /* ── Stale data banner ── */
+  .stale-banner {
+    display: none;
+    background: rgba(220, 53, 69, 0.15);
+    border: 1px solid rgba(220, 53, 69, 0.35);
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #fc8181;
+    text-align: center;
+  }
+  .stale-banner.visible { display: block; }
 
   .search-box {
     width: 100%;
@@ -50,64 +61,24 @@
     color: #e0e0e0;
     margin-bottom: 25px;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
   }
+  .search-box:focus { outline: none; border-color: #4a90d9; }
+  .search-box::placeholder { color: #6b7280; }
 
-  .search-box:focus {
-    outline: none;
-    border-color: #4a90d9;
-    box-shadow: 0 0 20px rgba(74, 144, 217, 0.3);
-    transform: translateY(-1px);
-  }
-
-  .search-box::placeholder {
-    color: #6b7280;
-  }
-
-  .matches-container {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
+  .matches-container { display: flex; flex-direction: column; gap: 14px; }
 
   .match {
     background: linear-gradient(145deg, #1e2a4a 0%, #1a233a 100%);
     border: 1px solid #2d3748;
     border-left: 4px solid #4a90d9;
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
     transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
     cursor: pointer;
     position: relative;
   }
-
-  .match::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #4a90d9, transparent);
-    transform: scaleX(0);
-    transition: transform 0.35s ease;
-  }
-
-  .match:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 30px rgba(74, 144, 217, 0.2), 0 6px 20px rgba(0,0,0,0.35);
-    border-color: #3d4a5c;
-  }
-
-  .match:hover::before {
-    transform: scaleX(1);
-  }
-
-  .match.expanded {
-    border-color: #4a90d9;
-    box-shadow: 0 8px 28px rgba(74, 144, 217, 0.22);
-  }
+  .match:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(74,144,217,0.2); }
+  .match.expanded { border-color: #4a90d9; }
 
   .match-header {
     display: flex;
@@ -118,19 +89,8 @@
     gap: 12px;
   }
 
-  .match-teams {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .team-name {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #fff;
-  }
-
+  .match-teams { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .team-name { font-size: 1.15rem; font-weight: 700; color: #fff; }
   .vs-badge {
     background: linear-gradient(135deg, #2d3748, #3d4a5c);
     color: #a0aec0;
@@ -138,7 +98,6 @@
     border-radius: 6px;
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.5px;
   }
 
   .match-meta {
@@ -151,665 +110,493 @@
     padding-top: 10px;
     border-top: 1px solid rgba(255,255,255,0.05);
   }
-
-  .match-meta small {
-    color: #6b7280;
-    font-size: 0.8rem;
-  }
+  .match-meta small { color: #6b7280; font-size: 0.8rem; }
 
   .expand-arrow {
     color: #4a90d9;
     font-size: 16px;
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    background: rgba(74, 144, 217, 0.1);
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: rgba(74,144,217,0.1);
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
     border-radius: 8px;
   }
+  .match.expanded .expand-arrow { transform: rotate(180deg); background: rgba(74,144,217,0.2); }
 
-  .match.expanded .expand-arrow {
-    transform: rotate(180deg);
-    background: rgba(74, 144, 217, 0.2);
-  }
-
-  .match-details {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .match.expanded .match-details {
-    max-height: 800px;
-  }
+  .match-details { max-height: 0; overflow: hidden; transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1); }
+  .match.expanded .match-details { max-height: 1200px; }
 
   .match-details-inner {
-    padding: 14px 18px;
-    padding-bottom: 16px;
+    padding: 14px 18px 16px;
     border-top: 1px solid rgba(255,255,255,0.05);
-    background: rgba(0, 0, 0, 0.15);
+    background: rgba(0,0,0,0.15);
   }
 
   .details-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 14px;
   }
 
   .details-section {
-    background: linear-gradient(145deg, rgba(30, 42, 74, 0.7), rgba(26, 35, 58, 0.85));
+    background: linear-gradient(145deg, rgba(30,42,74,0.7), rgba(26,35,58,0.85));
     padding: 14px;
     border-radius: 10px;
-    border: 1px solid rgba(74, 144, 217, 0.12);
+    border: 1px solid rgba(74,144,217,0.12);
   }
-
   .details-section h4 {
-    margin: 0 0 12px 0;
+    margin: 0 0 12px;
     color: #4a90d9;
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 1.2px;
     font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 6px;
   }
 
-  .details-section h4::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    background: #4a90d9;
-    border-radius: 50%;
+  /* ── Prediction bar ── */
+  .prediction-section { grid-column: 1 / -1; }
+  .pred-bars { display: flex; flex-direction: column; gap: 8px; }
+  .pred-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .pred-label { width: 80px; color: #a0aec0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pred-track { flex: 1; background: rgba(255,255,255,0.07); border-radius: 4px; height: 8px; }
+  .pred-fill { height: 8px; border-radius: 4px; transition: width 0.6s ease; }
+  .pred-fill.home  { background: linear-gradient(90deg, #28a745, #20c94a); }
+  .pred-fill.draw  { background: linear-gradient(90deg, #6c757d, #8a9299); }
+  .pred-fill.away  { background: linear-gradient(90deg, #dc3545, #e05260); }
+  .pred-pct { width: 36px; text-align: right; font-weight: 700; color: #fff; font-size: 13px; }
+  .confidence-tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-top: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
   }
+  .conf-high   { background: rgba(40,167,69,0.2);  color: #5eed7a; }
+  .conf-medium { background: rgba(255,193,7,0.2);  color: #ffc107; }
+  .conf-low    { background: rgba(108,117,125,0.2); color: #a0aec0; }
 
-  .odds-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+  /* ── H2H summary ── */
+  .h2h-summary { display: flex; gap: 8px; margin-bottom: 12px; }
+  .h2h-stat {
+    flex: 1; text-align: center;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 10px 6px;
   }
+  .h2h-stat .num { font-size: 1.4rem; font-weight: 700; color: #fff; }
+  .h2h-stat .lbl { font-size: 10px; color: #8892b0; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+  .h2h-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .h2h-table td { padding: 5px 6px; border-bottom: 1px solid rgba(255,255,255,0.04); color: #c0c8d0; }
+  .h2h-table td:first-child { color: #8892b0; }
+  .h2h-result { font-weight: 700; }
+  .h2h-H { color: #5eed7a; }
+  .h2h-A { color: #fc8181; }
+  .h2h-D { color: #a0aec0; }
+  .h2h-loading { color: #6b7280; font-size: 12px; font-style: italic; }
 
-  .odds-list li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    font-size: 0.9rem;
-  }
-
-  .odds-list li:last-child {
-    border-bottom: none;
-  }
-
-  .odds-list li .label {
-    color: #a0aec0;
-  }
-
-  .odds-list li .odd-value {
-    color: #fff;
-    font-weight: 700;
-    background: rgba(74, 144, 217, 0.12);
-    padding: 3px 8px;
-    border-radius: 5px;
-    font-size: 0.85rem;
-  }
-
-  .form-row {
-    display: flex;
-    align-items: center;
-    padding: 8px 0;
-    gap: 10px;
-    font-size: 0.85rem;
-  }
-
-  .form-row .team-name {
-    min-width: 100px;
-    color: #8892b0;
-    font-size: 0.85rem;
-    font-weight: 500;
-  }
-
-  .form-badges {
-    display: flex;
-    gap: 5px;
-    flex-wrap: wrap;
-  }
-
+  /* ── Form ── */
+  .form-row { display: flex; align-items: center; padding: 8px 0; gap: 10px; font-size: 0.85rem; }
+  .form-row .team-name { min-width: 100px; color: #8892b0; font-size: 0.85rem; font-weight: 500; }
+  .form-badges { display: flex; gap: 5px; flex-wrap: wrap; }
   .form-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 26px;
-    height: 26px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 700;
-    color: white;
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 26px; height: 26px; border-radius: 6px;
+    font-size: 12px; font-weight: 700; color: white;
   }
-
   .form-W { background: linear-gradient(135deg, #28a745, #20c94a); }
   .form-D { background: linear-gradient(135deg, #6c757d, #5a6268); }
   .form-L { background: linear-gradient(135deg, #dc3545, #c82333); }
 
-  .news-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  .news-item {
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    font-size: 0.85rem;
-    line-height: 1.5;
-  }
-
-  .news-item:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-  }
-
-  .news-item:first-child {
-    padding-top: 0;
-  }
-
-  .news-source {
-    color: #4a90d9;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 3px;
-    display: block;
-  }
-
-  .news-text {
-    color: #c0c8d0;
-    font-style: italic;
-  }
-
-  .news-item.injury .news-text {
-    color: #fc8181;
-  }
-
-  .loading {
-    text-align: center;
-    padding: 70px 20px;
-    color: #8892b0;
-  }
-
-  .loading-spinner {
-    display: inline-block;
-    width: 45px;
-    height: 45px;
-    border: 3px solid rgba(74, 144, 217, 0.2);
-    border-top-color: #4a90d9;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-
-  .loading-text {
-    margin-top: 18px;
-    font-size: 0.95rem;
-    color: #8892b0;
-    animation: pulse 1.5s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 70px 20px;
-    color: #8892b0;
-  }
-
-  .empty-state svg {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 20px;
-    opacity: 0.4;
-  }
-
+  /* ── Badges ── */
   .prediction-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 10px;
-    border-radius: 16px;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
+    display: inline-flex; align-items: center;
+    padding: 4px 10px; border-radius: 16px;
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.4px;
   }
-
-  .prediction-home {
-    background: rgba(40, 167, 69, 0.2);
-    color: #5eed7a;
-    border: 1px solid rgba(40, 167, 69, 0.25);
-  }
-  .prediction-draw {
-    background: rgba(108, 117, 125, 0.2);
-    color: #a0aec0;
-    border: 1px solid rgba(108, 117, 125, 0.25);
-  }
-  .prediction-away {
-    background: rgba(220, 53, 69, 0.2);
-    color: #fc8181;
-    border: 1px solid rgba(220, 53, 69, 0.25);
-  }
+  .prediction-home { background: rgba(40,167,69,0.2);  color: #5eed7a;  border: 1px solid rgba(40,167,69,0.25); }
+  .prediction-draw { background: rgba(108,117,125,0.2); color: #a0aec0; border: 1px solid rgba(108,117,125,0.25); }
+  .prediction-away { background: rgba(220,53,69,0.2);   color: #fc8181;  border: 1px solid rgba(220,53,69,0.25); }
 
   .league-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 10px;
-    background: rgba(74, 144, 217, 0.15);
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 600;
-    color: #4a90d9;
-    letter-spacing: 0.3px;
-    border: 1px solid rgba(74, 144, 217, 0.25);
+    display: inline-flex; align-items: center;
+    padding: 4px 10px; background: rgba(74,144,217,0.15);
+    border-radius: 6px; font-size: 10px; font-weight: 600;
+    color: #4a90d9; border: 1px solid rgba(74,144,217,0.25);
   }
-
   .status-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 9px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
+    display: inline-flex; align-items: center;
+    padding: 4px 10px; border-radius: 6px;
+    font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.6px;
   }
-
-  .status-NS {
-    background: rgba(74, 144, 217, 0.15);
-    color: #4a90d9;
-    border: 1px solid rgba(74, 144, 217, 0.25);
-  }
-  .status-FT {
-    background: rgba(108, 117, 125, 0.15);
-    color: #a0aec0;
-    border: 1px solid rgba(108, 117, 125, 0.25);
-  }
-  .status-LIVE {
-    background: rgba(220, 53, 69, 0.15);
-    color: #fc8181;
-    border: 1px solid rgba(220, 53, 69, 0.25);
-    animation: livePulse 1.5s infinite;
-  }
+  .status-NS   { background: rgba(74,144,217,0.15);  color: #4a90d9; border: 1px solid rgba(74,144,217,0.25); }
+  .status-FT   { background: rgba(108,117,125,0.15); color: #a0aec0; border: 1px solid rgba(108,117,125,0.25); }
+  .status-LIVE { background: rgba(220,53,69,0.15);   color: #fc8181;  border: 1px solid rgba(220,53,69,0.25); animation: livePulse 1.5s infinite; }
 
   @keyframes livePulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.3); }
-    50% { box-shadow: 0 0 0 5px rgba(220, 53, 69, 0); }
+    0%,100% { box-shadow: 0 0 0 0 rgba(220,53,69,0.3); }
+    50%      { box-shadow: 0 0 0 5px rgba(220,53,69,0); }
   }
+
+  /* ── Refresh indicator ── */
+  .refresh-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #4a90d9; display: inline-block;
+    animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .refresh-dot.loading { background: #ffc107; animation: spin 1s linear infinite; width:12px;height:12px;border:2px solid #ffc107;border-top-color:transparent;border-radius:50%;background:transparent; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+  .loading {
+    text-align: center; padding: 70px 20px; color: #8892b0;
+  }
+  .loading-spinner {
+    display: inline-block; width: 45px; height: 45px;
+    border: 3px solid rgba(74,144,217,0.2); border-top-color: #4a90d9;
+    border-radius: 50%; animation: spin 1s linear infinite;
+  }
+  .loading-text { margin-top: 18px; font-size: 0.95rem; color: #8892b0; }
+
+  .empty-state { text-align: center; padding: 70px 20px; color: #8892b0; }
 
   .notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    max-width: 300px;
+    position: fixed; top: 20px; right: 20px; max-width: 300px;
     padding: 14px 18px;
-    background: linear-gradient(135deg, rgba(30, 42, 74, 0.95), rgba(26, 35, 58, 0.95));
-    border: 1px solid rgba(74, 144, 217, 0.3);
-    border-left: 3px solid #4a90d9;
-    border-radius: 10px;
-    color: #e0e0e0;
-    font-size: 13px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-    z-index: 1000;
-    animation: slideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    background: linear-gradient(135deg, rgba(30,42,74,0.95), rgba(26,35,58,0.95));
+    border: 1px solid rgba(74,144,217,0.3); border-left: 3px solid #4a90d9;
+    border-radius: 10px; color: #e0e0e0; font-size: 13px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4); z-index: 1000;
+    animation: slideIn 0.35s cubic-bezier(0.4,0,0.2,1);
   }
-
-  @keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-  }
+  .notification.warn { border-left-color: #ffc107; }
+  @keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
 
   @media (max-width: 600px) {
-    body {
-      padding: 15px;
-    }
-
-    h1 {
-      font-size: 1.5rem;
-    }
-
-    .match-header {
-      padding: 14px 15px;
-    }
-
-    .team-name {
-      font-size: 1rem;
-    }
-
-    .match-teams {
-      width: 100%;
-    }
-
-    .expand-arrow {
-      margin-top: 8px;
-    }
-
-    .details-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .form-row {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 6px;
-    }
+    body { padding: 15px; }
+    h1 { font-size: 1.5rem; }
+    .match-header { padding: 14px 15px; }
+    .team-name { font-size: 1rem; }
+    .match-teams { width: 100%; }
+    .details-grid { grid-template-columns: 1fr; }
+    .form-row { flex-direction: column; align-items: flex-start; gap: 6px; }
   }
 </style>
-
 </head>
 <body>
-  <div class="container">
-    <h1>⚽ Match Center</h1>
-    <p class="subtitle">Odds, form & team news</p>
+<div class="container">
+  <h1>⚽ Match Centre</h1>
+  <p class="subtitle">
+    <span id="refreshDot" class="refresh-dot" title="Auto-refreshes every 5 min"></span>
+    Predictions · Form · Head-to-head
+  </p>
 
-    <input
-      type="text"
-      id="searchInput"
-      class="search-box"
-      placeholder="Search by team..."
-      oninput="filterMatches()"
-    />
+  <div id="staleBanner" class="stale-banner"></div>
 
-    <div id="matches">
-      <div class="loading">
-        <div class="loading-spinner"></div>
-        <p class="loading-text">Loading matches...</p>
-      </div>
+  <input type="text" id="searchInput" class="search-box"
+    placeholder="Search by team..." oninput="filterMatches()" />
+
+  <div id="matches">
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Loading matches...</p>
     </div>
   </div>
+</div>
 
 <script>
   let allMatches = [];
+  let refreshTimer = null;
+  const REFRESH_MS = 5 * 60 * 1000; // 5 minutes
 
+  // ── Sample fallback ────────────────────────────────────────────────────────
   const sampleMatches = [
     {
       id: 1001,
       time: new Date(Date.now() + 86400000).toISOString(),
-      home: "Arsenal",
-      away: "Chelsea",
-      league: "Premier League",
-      status: "NS",
-      odds: { Home: "2.10", Draw: "3.40", Away: "3.20" },
-      form: {
-        Arsenal: ["W", "W", "D", "W", "L"],
-        Chelsea: ["W", "L", "W", "D", "W"]
-      },
-      news: [
-        { source: "Arteta (Manager)", text: "We're ready for this London derby. The squad is in great shape." },
-        { source: "Injury Report", text: "Saliba doubtful with knock; Tomiyasu out.", type: "injury" },
-        { source: "Maresca (Manager)", text: "Chelsea have won 4 of last 5. Confidence is high." }
-      ]
+      home: "Arsenal", away: "Chelsea",
+      league: "Premier League", status: "NS",
+      prediction: { home: 48, draw: 24, away: 28, confidence: "high" },
+      form: { Arsenal: ["W","W","D","W","L"], Chelsea: ["W","L","W","D","W"] },
     },
     {
       id: 1002,
       time: new Date(Date.now() + 172800000).toISOString(),
-      home: "Manchester City",
-      away: "Liverpool",
-      league: "Premier League",
-      status: "NS",
-      odds: { Home: "1.85", Draw: "3.80", Away: "4.20" },
-      form: {
-        "Manchester City": ["W", "W", "W", "D", "W"],
-        Liverpool: ["W", "W", "L", "W", "D"]
-      },
-      news: [
-        { source: "Guardiola (Manager)", text: "Liverpool always bring intensity. We must match it." },
-        { source: "Injury Report", text: "De Bruyne fit to start; Stones remains out.", type: "injury" },
-        { source: "Slot (Manager)", text: "Anfield atmosphere will push us. Ready for the challenge." }
-      ]
+      home: "Manchester City", away: "Liverpool",
+      league: "Premier League", status: "NS",
+      prediction: { home: 52, draw: 23, away: 25, confidence: "high" },
+      form: { "Manchester City": ["W","W","W","D","W"], Liverpool: ["W","W","L","W","D"] },
     },
-    {
-      id: 1003,
-      time: new Date(Date.now() + 259200000).toISOString(),
-      home: "Manchester United",
-      away: "Tottenham",
-      league: "Premier League",
-      status: "NS",
-      odds: { Home: "2.45", Draw: "3.30", Away: "2.75" },
-      form: {
-        "Manchester United": ["L", "D", "W", "L", "D"],
-        Tottenham: ["W", "D", "L", "W", "W"]
-      },
-      news: [
-        { source: "Amorim (Manager)", text: "We need consistency. Working hard on training pitch." },
-        { source: "Injury Report", text: "Rashford available; Maguire questionable.", type: "injury" },
-        { source: "Postecoglou (Manager)", text: "Our style won't change. We play our game always." }
-      ]
-    },
-    {
-      id: 1004,
-      time: new Date(Date.now() + 345600000).toISOString(),
-      home: "Newcastle",
-      away: "Aston Villa",
-      league: "Premier League",
-      status: "NS",
-      odds: { Home: "2.20", Draw: "3.50", Away: "3.10" },
-      form: {
-        Newcastle: ["W", "D", "W", "W", "L"],
-        "Aston Villa": ["D", "W", "L", "D", "W"]
-      },
-      news: [
-        { source: "Howe (Manager)", text: "St James' Park will be rocking. Fans are our 12th man." },
-        { source: "Injury Report", text: "Tonali banned; Burn fit again.", type: "injury" },
-        { source: "Emery (Manager)", text: "Villa have quality. We believe in our project." }
-      ]
-    },
-    {
-      id: 1005,
-      time: new Date(Date.now() + 432000000).toISOString(),
-      home: "Brighton",
-      away: "West Ham",
-      league: "Premier League",
-      status: "NS",
-      odds: { Home: "2.00", Draw: "3.60", Away: "3.40" },
-      form: {
-        Brighton: ["D", "W", "W", "L", "D"],
-        "West Ham": ["L", "L", "D", "W", "L"]
-      },
-      news: [
-        { source: "Hurzeler (Manager)", text: "Young squad learning every week. Progress is clear." },
-        { source: "Injury Report", text: "Mitoma close to return; Danso out.", type: "injury" },
-        { source: "Lopetegui (Manager)", text: "Need to find rhythm. Working on solutions." }
-      ]
-    }
   ];
 
-  function loadMatches() {
-    fetch('/api/matches')
-      .then(res => {
-        if (!res.ok) throw new Error('Network response failed');
-        return res.json();
-      })
-      .then(data => {
-        if (!Array.isArray(data) || data.length === 0) {
-          throw new Error('Invalid or empty response');
-        }
+  // ── Data loading ───────────────────────────────────────────────────────────
+  async function loadMatches(silent = false) {
+    if (!silent) setDot("loading");
+    try {
+      const res  = await fetch("/api/matches");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      // Handle both old shape (array) and new shape ({matches, meta})
+      if (Array.isArray(data)) {
         allMatches = data;
-        renderMatches(data);
-      })
-      .catch(err => {
-        console.error('API error:', err);
+      } else {
+        allMatches = data.matches || [];
+        handleMeta(data.meta);
+      }
+
+      if (allMatches.length === 0 && !silent) showNotification("No upcoming fixtures found.");
+      renderMatches(filterBySearch(allMatches));
+      setDot("ok");
+    } catch (err) {
+      console.warn("API unavailable:", err.message);
+      if (!silent) {
         allMatches = sampleMatches;
         renderMatches(sampleMatches);
-        showNotification('API unavailable - showing sample data');
-      });
+        showNotification("API unavailable — showing sample data", "warn");
+      }
+      setDot("ok");
+    }
+    scheduleRefresh();
   }
 
-  function showNotification(message) {
-    const notification = document.createElement('div');
-    notification.className = 'notification';
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    setTimeout(() => {
-      notification.style.animation = 'slideIn 0.35s reverse';
-      setTimeout(() => notification.remove(), 350);
-    }, 4500);
+  function handleMeta(meta) {
+    if (!meta) return;
+    const banner = document.getElementById("staleBanner");
+    if (meta.stale) {
+      banner.textContent = `⚠️  Fixture data is ${meta.hours_since_fetch ?? "?"}h old. Run import_fixtures.py to refresh.`;
+      banner.classList.add("visible");
+    } else {
+      banner.classList.remove("visible");
+    }
   }
 
-  function filterMatches() {
-    const input = document.getElementById('searchInput').value.toLowerCase();
-    const filtered = allMatches.filter(match =>
-      match.home.toLowerCase().includes(input) ||
-      match.away.toLowerCase().includes(input)
-    );
-    renderMatches(filtered);
+  function scheduleRefresh() {
+    clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(() => loadMatches(true), REFRESH_MS);
   }
+
+  function setDot(state) {
+    const d = document.getElementById("refreshDot");
+    d.className = "refresh-dot" + (state === "loading" ? " loading" : "");
+  }
+
+  // ── H2H fetch (on expand) ──────────────────────────────────────────────────
+  const h2hCache = {};
+  async function fetchH2H(home, away, containerId) {
+    const key = `${home}|${away}`;
+    if (h2hCache[key]) return renderH2H(h2hCache[key], containerId, home, away);
+
+    const el = document.getElementById(containerId);
+    if (el) el.innerHTML = `<span class="h2h-loading">Loading head-to-head...</span>`;
+
+    try {
+      const res  = await fetch(`/api/h2h?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      h2hCache[key] = data;
+      renderH2H(data, containerId, home, away);
+    } catch {
+      const el2 = document.getElementById(containerId);
+      if (el2) el2.innerHTML = `<span class="h2h-loading">H2H data unavailable</span>`;
+    }
+  }
+
+  function renderH2H(data, containerId, home, away) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const { summary, meetings } = data;
+    const total = summary.home_wins + summary.draws + summary.away_wins || 1;
+    const rows  = meetings.slice(0, 6).map(m => {
+      const label = m.ftr === "D" ? "Draw"
+        : m.ftr === "H" ? `${m.home} win`
+        : `${m.away} win`;
+      const cls = `h2h-${m.ftr}`;
+      return `<tr>
+        <td>${m.match_date?.slice(0,7) || ""}</td>
+        <td>${esc(m.home)} ${m.fthg}–${m.ftag} ${esc(m.away)}</td>
+        <td class="h2h-result ${cls}">${label}</td>
+      </tr>`;
+    }).join("");
+
+    el.innerHTML = `
+      <div class="h2h-summary">
+        <div class="h2h-stat">
+          <div class="num">${summary.home_wins}</div>
+          <div class="lbl">${esc(home.split(" ").pop())} wins</div>
+        </div>
+        <div class="h2h-stat">
+          <div class="num">${summary.draws}</div>
+          <div class="lbl">Draws</div>
+        </div>
+        <div class="h2h-stat">
+          <div class="num">${summary.away_wins}</div>
+          <div class="lbl">${esc(away.split(" ").pop())} wins</div>
+        </div>
+      </div>
+      <table class="h2h-table"><tbody>${rows}</tbody></table>
+    `;
+  }
+
+  // ── Rendering ──────────────────────────────────────────────────────────────
+  function filterBySearch(matches) {
+    const q = document.getElementById("searchInput").value.toLowerCase();
+    return q ? matches.filter(m =>
+      m.home.toLowerCase().includes(q) || m.away.toLowerCase().includes(q)
+    ) : matches;
+  }
+
+  function filterMatches() { renderMatches(filterBySearch(allMatches)); }
 
   function renderMatches(data) {
-    const container = document.getElementById('matches');
-    container.innerHTML = '';
-
-    if (data.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.55-7.55L19 8l-9 9z"/>
-          </svg>
-          <p style="font-size: 1rem;">No matches found</p>
-          <p style="font-size: 0.85rem; margin-top: 8px; opacity: 0.7;">Try a different search</p>
-        </div>
-      `;
+    const container = document.getElementById("matches");
+    if (!data.length) {
+      container.innerHTML = `<div class="empty-state"><p>No matches found</p></div>`;
       return;
     }
-
-    const matchesList = document.createElement('div');
-    matchesList.className = 'matches-container';
-
-    data.forEach((match, index) => {
-      const matchEl = createMatchElement(match, index);
-      matchesList.appendChild(matchEl);
-    });
-
-    container.appendChild(matchesList);
+    const list = document.createElement("div");
+    list.className = "matches-container";
+    data.forEach((match, i) => list.appendChild(createMatchEl(match, i)));
+    container.innerHTML = "";
+    container.appendChild(list);
   }
 
-  function createMatchElement(match, index) {
-    const div = document.createElement('div');
-    div.className = 'match';
-    div.onclick = () => toggleDetails(index);
+  function createMatchEl(match, index) {
+    const div       = document.createElement("div");
+    div.className   = "match";
+    div.dataset.idx = index;
+    div.onclick     = () => toggleDetails(div, match);
 
-    const odds = match.odds || {};
-    const homeForm = match.form?.[match.home] || [];
-    const awayForm = match.form?.[match.away] || [];
-    const news = match.news || [];
-
-    const prediction = calculatePrediction(odds);
-    const statusClass = match.status || 'NS';
+    const pred      = match.prediction || {};
+    const homeForm  = match.form?.[match.home] || [];
+    const awayForm  = match.form?.[match.away] || [];
+    const statusCls = match.status || "NS";
+    const favBadge  = getFavBadge(pred);
+    const h2hId     = `h2h-${match.id || index}`;
 
     div.innerHTML = `
       <div class="match-header">
         <div class="match-teams">
-          <span class="team-name">${escapeHtml(match.home)}</span>
+          <span class="team-name">${esc(match.home)}</span>
           <span class="vs-badge">VS</span>
-          <span class="team-name">${escapeHtml(match.away)}</span>
+          <span class="team-name">${esc(match.away)}</span>
         </div>
-        <div class="expand-arrow" title="Toggle">▼</div>
+        <div class="expand-arrow">▼</div>
       </div>
       <div class="match-meta">
-        <span class="status-badge status-${statusClass}">${formatStatus(statusClass)}</span>
-        <span class="league-badge">${escapeHtml(match.league)}</span>
-        ${prediction ? `<span class="prediction-badge prediction-${prediction.label}">${prediction.text}</span>` : ''}
-        <small style="margin-left: auto;">${formatDateTime(match.time)}</small>
+        <span class="status-badge status-${statusCls}">${fmtStatus(statusCls)}</span>
+        <span class="league-badge">${esc(match.league || "")}</span>
+        ${favBadge}
+        <small style="margin-left:auto">${fmtDate(match.time)}</small>
       </div>
       <div class="match-details">
         <div class="match-details-inner">
           <div class="details-grid">
+
+            ${pred.home !== null && pred.home !== undefined ? `
+            <div class="details-section prediction-section">
+              <h4>Model prediction</h4>
+              <div class="pred-bars">
+                <div class="pred-row">
+                  <span class="pred-label" title="${esc(match.home)}">${esc(match.home)}</span>
+                  <div class="pred-track"><div class="pred-fill home" style="width:${pred.home}%"></div></div>
+                  <span class="pred-pct">${pred.home}%</span>
+                </div>
+                <div class="pred-row">
+                  <span class="pred-label">Draw</span>
+                  <div class="pred-track"><div class="pred-fill draw" style="width:${pred.draw}%"></div></div>
+                  <span class="pred-pct">${pred.draw}%</span>
+                </div>
+                <div class="pred-row">
+                  <span class="pred-label" title="${esc(match.away)}">${esc(match.away)}</span>
+                  <div class="pred-track"><div class="pred-fill away" style="width:${pred.away}%"></div></div>
+                  <span class="pred-pct">${pred.away}%</span>
+                </div>
+              </div>
+              <span class="confidence-tag conf-${pred.confidence || 'low'}">${pred.confidence || 'low'} confidence · ${pred.data_points || 0} games</span>
+            </div>` : ""}
+
             <div class="details-section">
-              <h4>Odds</h4>
-              <ul class="odds-list">
-                <li><span class="label">${escapeHtml(match.home)}</span><span class="odd-value">${odds["Home"] || "N/A"}</span></li>
-                <li><span class="label">Draw</span><span class="odd-value">${odds["Draw"] || "N/A"}</span></li>
-                <li><span class="label">${escapeHtml(match.away)}</span><span class="odd-value">${odds["Away"] || "N/A"}</span></li>
-              </ul>
-            </div>
-            <div class="details-section">
-              <h4>Form (Last 5)</h4>
+              <h4>Form (last 5)</h4>
               <div class="form-row">
-                <span class="team-name">${escapeHtml(match.home)}</span>
-                <div class="form-badges">${homeForm.length > 0 ? homeForm.map(r => `<span class="form-badge form-${r}">${r}</span>`).join('') : '<span style="color:#666">—</span>'}</div>
+                <span class="team-name">${esc(match.home)}</span>
+                <div class="form-badges">${fmtForm(homeForm)}</div>
               </div>
               <div class="form-row">
-                <span class="team-name">${escapeHtml(match.away)}</span>
-                <div class="form-badges">${awayForm.length > 0 ? awayForm.map(r => `<span class="form-badge form-${r}">${r}</span>`).join('') : '<span style="color:#666">—</span>'}</div>
+                <span class="team-name">${esc(match.away)}</span>
+                <div class="form-badges">${fmtForm(awayForm)}</div>
               </div>
             </div>
-            ${news.length > 0 ? `
-            <div class="details-section" style="grid-column: 1 / -1;">
-              <h4>Team News</h4>
-              <ul class="news-list">
-                ${news.map(n => `
-                  <li class="news-item${n.type === 'injury' ? ' injury' : ''}">
-                    <span class="news-source">${n.source}</span>
-                    <span class="news-text">${n.text}</span>
-                  </li>
-                `).join('')}
-              </ul>
+
+            <div class="details-section">
+              <h4>Head to head</h4>
+              <div id="${h2hId}"><span class="h2h-loading">Expand to load...</span></div>
             </div>
-            ` : ''}
+
           </div>
         </div>
       </div>
     `;
-
     return div;
   }
 
-  function calculatePrediction(odds) {
-    if (!odds.Home || !odds.Draw || !odds.Away) return null;
-    const homeOdd = parseFloat(odds.Home);
-    const drawOdd = parseFloat(odds.Draw);
-    const awayOdd = parseFloat(odds.Away);
-    if (homeOdd <= drawOdd && homeOdd <= awayOdd) return { label: 'home', text: 'Home Favorite' };
-    if (awayOdd <= drawOdd && awayOdd <= homeOdd) return { label: 'away', text: 'Away Favorite' };
-    return { label: 'draw', text: 'Even Match' };
+  function toggleDetails(el, match) {
+    const wasExpanded = el.classList.contains("expanded");
+    el.classList.toggle("expanded");
+    if (!wasExpanded) {
+      fetchH2H(match.home, match.away, `h2h-${match.id || el.dataset.idx}`);
+    }
   }
 
-  function formatStatus(status) {
-    const map = { 'NS': 'Not Started', 'FT': 'Full Time', 'LIVE': 'LIVE', 'HT': 'Half Time', 'POSTP': 'Postponed', 'CANC': 'Cancelled' };
-    return map[status] || status;
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function getFavBadge(pred) {
+    if (!pred || pred.home === null) return "";
+    if (pred.home > pred.away && pred.home > pred.draw)
+      return `<span class="prediction-badge prediction-home">Home fav ${pred.home}%</span>`;
+    if (pred.away > pred.home && pred.away > pred.draw)
+      return `<span class="prediction-badge prediction-away">Away fav ${pred.away}%</span>`;
+    return `<span class="prediction-badge prediction-draw">Even match</span>`;
   }
 
-  function formatDateTime(dateStr) {
+  function fmtForm(form) {
+    if (!form.length) return `<span style="color:#666">—</span>`;
+    return form.map(r => `<span class="form-badge form-${r}">${r}</span>`).join("");
+  }
+
+  function fmtStatus(s) {
+    return { NS:"Not started", FT:"Full time", LIVE:"LIVE", HT:"Half time", POSTP:"Postponed", CANC:"Cancelled" }[s] || s;
+  }
+
+  function fmtDate(d) {
     try {
-      const date = new Date(dateStr);
-      const now = new Date();
-      const isToday = date.toDateString() === now.toDateString();
-      const isTomorrow = date.toDateString() === new Date(now.getTime() + 86400000).toDateString();
-      const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-      if (isToday) return `Today • ${timeStr}`;
-      if (isTomorrow) return `Tomorrow • ${timeStr}`;
-      return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ' • ' + timeStr;
-    } catch (e) { return dateStr; }
+      const date = new Date(d), now = new Date();
+      const time = date.toLocaleTimeString("en-GB", { hour:"2-digit", minute:"2-digit" });
+      if (date.toDateString() === now.toDateString()) return `Today · ${time}`;
+      if (date.toDateString() === new Date(now.getTime()+86400000).toDateString()) return `Tomorrow · ${time}`;
+      return date.toLocaleDateString("en-GB", { weekday:"short", month:"short", day:"numeric" }) + ` · ${time}`;
+    } catch { return d; }
   }
 
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+  function esc(s) {
+    const d = document.createElement("div");
+    d.textContent = s || "";
+    return d.innerHTML;
   }
 
-  function toggleDetails(index) {
-    const matchEl = document.querySelectorAll('.match')[index];
-    matchEl.classList.toggle('expanded');
+  function showNotification(msg, type = "") {
+    const n = document.createElement("div");
+    n.className = "notification" + (type ? ` ${type}` : "");
+    n.textContent = msg;
+    document.body.appendChild(n);
+    setTimeout(() => { n.style.animation = "slideIn 0.35s reverse"; setTimeout(() => n.remove(), 350); }, 4500);
   }
 
+  // ── Boot ───────────────────────────────────────────────────────────────────
   loadMatches();
 </script>
-
 </body>
 </html>

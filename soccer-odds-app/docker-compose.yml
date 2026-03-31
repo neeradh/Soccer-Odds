@@ -1,0 +1,43 @@
+services:
+
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - db_data:/app/server     # persists matches.db
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      DB_PATH: /app/server/matches.db
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/status"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Runs import_fixtures.py once a day at 06:00 UTC
+  cron:
+    image: python:3.12-slim
+    restart: unless-stopped
+    volumes:
+      - db_data:/app/server
+      - .:/workspace              # project files (needs read access for scripts)
+    env_file: .env
+    environment:
+      DB_PATH: /app/server/matches.db
+    working_dir: /workspace
+    entrypoint: >
+      sh -c "pip install -q requests python-dotenv pandas &&
+             echo '0 6 * * * cd /workspace && python import_fixtures.py >> /proc/1/fd/1 2>&1' | crontab - &&
+             crond -f -l 2"
+
+volumes:
+  db_data:

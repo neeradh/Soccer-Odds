@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l /c/Users/prudh/Soccer-Odds/soccer-odds-app/server/*.js)",
+      "Bash(curl -s -H \"Accept-Encoding: identity\" \"http://localhost:3000/api/results?season=23_24\")",
+      "Bash(python -c \"import sys,json; print\\(json.load\\(sys.stdin\\)\\)\")",
+      "Bash(python -c \"import sys,json; print\\(type\\(json.load\\(sys.stdin\\)\\)\\)\")",
+      "Bash(taskkill /F /IM node.exe /T)"
+    ]
+  }
+}
